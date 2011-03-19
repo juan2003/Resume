@@ -10,10 +10,15 @@ Key Qualifications
 ==============
 
 **Server-Side Web Programming** - PHP / ColdFusion 
+
 **Data-driven development** - MySQL / MS SQL Server / Web services 
+
 **Javascript** - AJAX / jQuery / Prototype / script.aculo.us 
+
 **User Interface** - HTML / CSS / XHTML / XML / XSLT / Xpath 
+
 **Software Engineering** - Full Software Life Cycle / Object Oriented Design 
+
 **Communication Skills** - Help Desk Support  / Training / Documentation 
 
 Experience 
