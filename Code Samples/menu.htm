@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Restaurant Orders</title>
+    <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+    <script language="Javascript" type="text/javascript">
+    //<![CDATA[
+
+    google.load('jquery', '1.4.2');
+    
+    function init() {
+    $(document).ready(function() {
+     $('#run').click(runCode);
+     $('#target').change(validatePrice);
+     runCode();
+    });
+    }
+    
+    google.setOnLoadCallback(init);
+    
+    function buildMenu() {
+     var menu=$('dl').children('dt'), result=[];
+     for(var i=0,j=menu.size();i<j;i++) {
+      result.push(new MenuItem(menu.eq(i).text(),menu.eq(i).next('dd').text()));
+     }
+     result.sort(REVERSE_NUMERIC_SORT);
+     return result;
+    }
+    
+    function MenuItem(name,price) {
+     this.name=name;
+     this.price=parseFloat(price);
+    }
+    MenuItem.prototype.valueOf = function() {return this.price};
+    MenuItem.prototype.toString = function() {return this.name+': $'+this.price.toFixed(2);};
+    
+    function subsetSum(set, target) {
+     var x,a={};
+     for(x in set) {
+      if(target%set[x]==0){
+       a[x]=target/set[x];
+       return a;
+      }
+     }
+     for(x in set) {
+      if(set[x] > target) continue;
+      if( a=subsetSum(set, target-set[x]) ){
+       if( typeof(a[x]) == 'undefined' ){
+        a[x]=1;
+       } else {
+        a[x]++;
+       }
+       return a;
+      }
+     }
+     return false;
+    }
+    
+    function runCode() {
+     var x,
+         intSet={},
+         menu=buildMenu(),
+         order,
+         total=0,
+         intTarget,
+         cf,
+         orderArea=$('#order'),
+         target=parseFloat($('#target').val());
+     //build integer set
+     for(x in menu) {
+      intSet[x]=Math.round(menu[x]*100);
+     }
+     intTarget=Math.round(target*100);
+     cf=gcf(intSet);
+     if( intTarget%cf==0 && (order=subsetSum(intSet,intTarget/cf)) ) {
+      orderArea.empty();
+      for(x in order){
+       orderArea.append('<div>'+menu[x].toString()+' &times; '+order[x]+'</div>')
+       total+=order[x]*menu[x];
+      }
+      orderArea.append('<div class="total">Total: $'+total.toFixed(2)+'</div>');
+      } else {
+       orderArea.text('Combination not possible')
+      }
+     }
+    
+    function gcf(set) {
+     //Calc greatest common factor
+     var primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71];
+     var factor=1, x, i, primeLength=primes.length;
+     do {
+      for(x in set){
+       for(i in primes) {
+        if(set[x] < primes[i] || set[x]%primes[i]!=0) {
+         delete primes[i];
+         primeLength--;
+        }
+       }
+       primes.sort();
+       primes.length=primeLength;
+      }
+      for(i in primes){
+       for(x in set){
+        set[x]/=primes[i];
+       }
+       factor*=primes[i];
+      }
+     } while(primes.length > 0);
+     return factor;
+    }
+    
+    function REVERSE_NUMERIC_SORT (a, b) {
+     return a>b?-1:1;
+    }
+    function validatePrice(e) {
+     var field = $(e.target);
+     if( parseFloat( field.val() ) >= 0 ) {
+      field.val( parseFloat(field.val()).toFixed(2) );
+     } else {
+      showError('Invalid value');
+      return false;
+     }
+    }
+    function showError(msg) {
+     $('#error').hide().text(msg).slideDown('slow').fadeIn().delay(5000).slideDown().fadeOut();
+    }
+    //]]>
+    </script>
+    <style type="text/css">
+     dl dd:before {content: '$';}
+     .total {font-weight: bold}
+     #sidebar {position:absolute;width:30%;padding:10px;top:10px;right:10px;border:thin solid navy;background-color:#eeeeff;-moz-border-radius:10px;-webkit-border-radius:10px;border-radius:10px;}
+     #error {color:red;}
+    </style>
+  </head>
+  <body>
+   <div id="main">
+    <h1>Menu</h1>
+    <dl id="menu">
+    <dt>mixed fruit</dt><dd>2.15</dd>
+    <dt>french fries</dt><dd>2.75</dd>
+    <dt>side salad</dt><dd>3.35</dd>
+    <dt>hot wings</dt><dd>3.55</dd>
+    <dt>mozzarella sticks</dt><dd>4.20</dd>
+    <dt>sampler plate</dt><dd>5.80</dd>
+    </dl>
+    <div id="error"></div>
+    <label for="target">Target Price:</label><input id="target" value="15.05" /><button id="run">Run</button>
+    <div><a href="http://xkcd.com/287/">xkcd</a></div>
+   </div>
+   <div id="sidebar">
+   <h1>Order</h1>
+    <div id="order">
+    </div>
+   </div>
+  </body>
+</html>

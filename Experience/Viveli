@@ -1,0 +1,6 @@
+Facebook Application Developer, 2009
+
+Created web-based applications for Facebook using PHP, Blitz, MySQL.
+
+ * Optimized application for heavy traffic using Memcache and Blitz templates
+ * Created reusable accordion, sortable, and drag-and-drop UI widgets from functions available in FBJS limited sandbox.
