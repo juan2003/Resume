@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Puzzle</title>
+<style type="text/css">
+#bitmap { display: block; width: 150px; line-height: 0; margin: 50px }
+#bitmap span { display:inline-block; width: 6px; height: 6px; }
+.reverse .off, .on { background-color: black;}
+.off, .reverse .on { background-color: white; }
+</style>
+<script type="text/javascript">
+var BITWIDTH, WIDTH, ZERO, MAX, func, _refresh = function() {return this;};
+var rClass = 'reverse', rPattern = new RegExp('\\b'+rClass+'\\b');
+setWidth.call({value:8});
+setFunc.call({checked:false});
+var init = function() {
+	var input = document.createElement('textarea');
+	input.addEventListener('change', doIt, false);
+	var select = document.createElement('select'), opt = null;
+	for(var w=4,_w=28;w<=_w;w+=4){
+		opt = newElement('option', w+'-bit words');
+		opt.value = w;
+		if ( w == BITWIDTH ) opt.selected = true;
+		select.appendChild(opt);
+	}
+	select.addEventListener('change', setWidth, false);
+	var cb = newElement('label','Reverse bit order');
+	var _cb = document.createElement('input');
+	_cb.type = 'checkbox';
+	_cb.checked = func == bigEndian;
+	_cb.addEventListener('change', setFunc, false)
+	cb.appendChild( _cb );
+	var color = newElement('label','Invert colors');
+	var _col = document.createElement('input');
+	_col.type = 'checkbox';
+	_col.checked = !document.getElementById('bitmap').className.match(rPattern);
+	_col.addEventListener('change', reverseColor, false)
+	color.appendChild(_col);
+	document.body.appendChild(color);
+	document.body.appendChild(cb);
+	document.body.appendChild(select);
+	document.body.appendChild(input);
+	_refresh = function() { doIt.call(input); };
+};
+
+document.addEventListener('DOMContentLoaded', init, false);
+function reverseColor () {
+	var b = document.getElementById('bitmap'), c = b.className;
+	b.className = !c.match(rPattern)?c+' '+rClass:c.replace(rPattern, '');
+}
+
+function setFunc() {
+	func = this.checked?bigEndian:littleEndian;
+	_refresh();
+}
+function setWidth() {
+	BITWIDTH = parseInt(this.value);
+	WIDTH = BITWIDTH / 4;
+	ZERO = getZero(WIDTH);
+	MAX = 1 << (BITWIDTH - 1);
+	_refresh();
+}
+function bigEndian(n) {
+	return 1 << n;
+}
+function littleEndian(n) {
+	return MAX >> n;
+}
+function getZero(w) {
+	var z = ''
+	for (var i=0;i<w;i++)
+		z+='0';
+	return z;
+}
+function doIt() {
+	decodeBase64( this.value );
+	//doCanvas(this.value)
+}
+function decodeBase64(b64) {
+	var hex = btoh(b64), x = 0, bitmap = document.getElementById('bitmap'), pixel = null;
+	bitmap.innerHTML = '';
+	for( var i=0,_i=hex.length; i<_i; i+=WIDTH) {
+		x = parseInt(hex.substr(i,WIDTH), 16);
+		for (var j=0, _j = BITWIDTH; j<_j; j++){
+			pixel = document.createElement('span');
+			pixel.className = ( x & func(j) )?'on':'off';
+			bitmap.appendChild( pixel);
+		}
+	}	
+}
+function showHex(b) {
+	document.body.appendChild( newElement('div', b ) );
+	document.body.appendChild( newElement('div', btoh(b) ) );
+}
+function newElement(tag, content) {
+	var a = document.createElement(tag);
+	a.appendChild( typeof(content) == 'string' ? document.createTextNode(content) : content );
+	return a;
+}
+function btoh (b) {
+	var a = atob(b), t = [];
+	for( i=0,_i=a.length; i<_i; i++ ){
+		t.push( String('00'+a.charCodeAt(i).toString(16)).substr(-2)  );
+	}
+	return t.join('');
+}
+function htob (h) {
+	if( h.length % 2 == 1 ) h += '0';
+	return btoa(unescape(h.replace(/([0-9a-f]{2})/ig,'%$1')));
+}
+function doCanvas(url) {
+	var img = document.createElement('img');
+	img.onload = getData;
+	img.src = url;
+}
+function getData() {	
+	var c = document.createElement('canvas');
+	var w = this.width, h = this.height;
+	document.body.appendChild(c);
+	var ctx = c.getContext('2d');
+	ctx.drawImage(this,0,0,w,h);
+	var data = ctx.getImageData(0,0,w,h);
+	var i=0,_i=data.data.length, j=0, h = 0, _err, hx = [];
+	while(i<_i){
+		h = 0;
+		try {
+			for(j=0;j<BITWIDTH;j++){
+				h += (data.data[i]==0)?func(j):0;
+				i+=4;
+			}
+		}
+		catch(_err) {
+			console.log(_err);
+		}
+		hx.push( String(ZERO+ h.toString(16)).substr(-WIDTH) );
+	}
+	var result = htob(hx.join(''));
+	decodeBase64( result );
+	showHex(result);
+}
+</script>
+</head>
+<body>
+<!--original text:  -->
+<div id="bitmap">
+</div>
+</body>
+</html>
+
